@@ -8,71 +8,16 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 import numpy as np
-import time
-start_time = time.time()
-
-
-import requests as req
-
-
-
+#import requests as req
 
 #%%tarihler
 date1="2021-12-01"
 date2="2022-01-12"
 pathresult='C:/sim/'+date1+'_'+date2+' result.xlsx'
 #%%
-ptf_url="https://seffaflik.epias.com.tr/transparency/service/market/mcp-smp"#PTF-#fba-#fbs-#Eşleşme miktarı -blok teklif miktarı
-tklf_url='https://seffaflik.epias.com.tr/transparency/service/market/day-ahead-market-volume'
-blk_url='https://seffaflik.epias.com.tr/transparency/service/market/amount-of-block'
-ytp_url='https://seffaflik.epias.com.tr/transparency/service/consumption/load-estimation-plan'
-rtm_url='https://seffaflik.epias.com.tr/transparency/service/production/wpp-generation-and-forecast'
-#%%
-tklf_df= pd.DataFrame(req.get(tklf_url,params={"startDate":date1,"endDate":date2}).json()['body']['dayAheadMarketVolumeList'])
-tklf_df["date"]=pd.to_datetime(tklf_df["date"].str[0:-3], format='%Y-%m-%dT%H:%M:%S.%f')
-
-ptf_df= pd.DataFrame(req.get(ptf_url,params={"startDate":date1,"endDate":date2}).json()['body']['mcpSmps'])
-ptf_df["date"]=pd.to_datetime(ptf_df["date"].str[0:-3], format='%Y-%m-%dT%H:%M:%S.%f')
-
-blk_df=pd.DataFrame(req.get(blk_url,params={"startDate":date1,"endDate":date2}).json()['body']['amountOfBlockList'])
-blk_df["date"]=pd.to_datetime(blk_df["date"].str[0:-3], format='%Y-%m-%dT%H:%M:%S.%f')
-
-ytp_df=pd.DataFrame(req.get(ytp_url,params={"startDate":date1,"endDate":date2}).json()['body']['loadEstimationPlanList'])
-ytp_df["date"]=pd.to_datetime(ytp_df["date"].str[0:-3], format='%Y-%m-%dT%H:%M:%S.%f')
-
-rtm_df=pd.DataFrame(req.get(rtm_url,params={"startDate":date1,"endDate":date2}).json()['body']['data'])
-rtm_df["effectiveDate"]=pd.to_datetime(rtm_df["effectiveDate"].str[0:-3], format='%Y-%m-%dT%H:%M:%S.%f')
-rtm_df.rename(columns ={'effectiveDate':'date'},inplace=True)
-
-#%%
-tklf_df['date'] = tklf_df['date'].dt.tz_localize(None)
-ptf_df["date"]=ptf_df["date"].dt.tz_localize(None)
-blk_df["date"]=blk_df["date"].dt.tz_localize(None)
-ytp_df["date"]=ytp_df["date"].dt.tz_localize(None)
-rtm_df["date"]=rtm_df["date"].dt.tz_localize(None)
-
-
-#%%
-result=tklf_df.merge(ptf_df,how='left',on='date').merge(blk_df,how='left',on='date').merge(ytp_df,how='left',on='date').merge(rtm_df,how='left',on='date')
-result.drop(columns = ["mcpState","smp","smpDirection","blockBid","blockOffer","matchedBids","period",
-                       "periodType","quantityOfAsk","quantityOfBid","matchedBids","volume","generation",
-                       "quarter1","quarter2","quarter3","quarter4"],inplace=True)
-
-result.rename(columns ={'matchedOffers':'Eşleşme','priceIndependentBid':'FBA','priceIndependentOffer':'FBS',
-                        'mcp':'PTF','amountOfPurchasingTowardsBlock':'Blok Alış Teklif','amountOfPurchasingTowardsMatchBlock':'Blok Alış Eşleşme',
-                        'amountOfSalesTowardsBlock':'Blok Satış Teklif','amountOfSalesTowardsMatchBlock':'Blok Satış Eşleşme','lep':'YTP','forecast':'Ritm'},inplace=True)
-result.drop(columns = ['Blok Alış Teklif','Blok Satış Teklif'],inplace=True)
-
-result['day']=result['date'].dt.day
-
-result['hour']=result['date'].dt.hour
-
-#%%burada csv at, site de yeniden oku düzenle
-result.to_csv('C:/streamlitapp/heroku.csv',encoding='utf-8-sig',sep=";", decimal=",",index=None)  
-
 
 #%%yeniden oku
-result=pd.read_csv('C:/streamlitapp/heroku.csv',encoding='utf-8-sig',sep=";", decimal=",",index_col=False)
+result=pd.read_csv('heroku.csv',encoding='utf-8-sig',sep=";", decimal=",",index_col=False)
 result['date']=pd.to_datetime(result['date'])
 
 #%%
